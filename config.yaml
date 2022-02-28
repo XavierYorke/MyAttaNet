@@ -1,0 +1,25 @@
+data_config:
+#H_G: \image\distance \mask\distance_mask
+#  DATASET_DIR: H:\Datasets\Eye\H_G
+  DATASET_DIR: /media/hy/Mayfly/Datasets/Eye/H_G
+  TXT_DIR: "data"
+
+train_config:
+  epochs: 100
+  batch_size: 6
+  learning_rate: 0.0001
+  output_dir: outputs
+  iterations: 10
+  seed: 1234
+
+#optim:
+#  momentum: 0.9
+#  wd: 5e-4
+#  lr0: 1e-2
+#  max_iter: 200000
+#  power: 0.9
+#  warmup_steps: 1000
+#  warmup_start_lr: 1e-5
+
+net_config:
+  n_classes: 2
