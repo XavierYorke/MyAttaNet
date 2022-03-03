@@ -34,8 +34,11 @@ class MyDataset(Dataset):  # 创建自己的类：MyDataset,这个类是继承�
             label = self.transform(label)
         return img, label  
 
-    def __len__(self):  
+    def __len__(self):
         return len(self.imgs)
 
+    def get_path(self, index):
+        img, label = self.imgs[index]
+        return img, label
 
 

@@ -29,7 +29,7 @@ def get_txt(DATASET_DIR, TXT_DIR):
 
 
 if __name__ == '__main__':
-    config = open('config.yaml')
+    config = open('../config.yaml')
     config = yaml.load(config, Loader=yaml.FullLoader)
     data_config = config['data_config']
-    get_txt(**data_config)
+    # get_txt(**data_config)

@@ -2,3 +2,5 @@ outputs/
 data/
 *.pth
 *.csv
+eval/
+exports/
