@@ -15,3 +15,7 @@ python evaluate.py
 ```basic
 python export.py
 ```
+### 推理
+```basic
+python inference.py
+```
