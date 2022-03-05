@@ -1,7 +1,7 @@
 data_config:
-#H_G: \image\distance \mask\distance_mask 480 x 496
-  DATASET_DIR: ../../Datasets/Eye/H_G
-  TXT_DIR: "data"
+  #H_G: \image\distance \mask\distance_mask 480 x 496
+  dataset_dir: ../../Datasets/Eye/H_G
+  txt_dir: "data"
 
 train_config:
   epochs: 100

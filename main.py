@@ -35,14 +35,20 @@ def set_seed(seed):
 def main(epochs, batch_size, learning_rate, output_dir, iterations, seed):
     # 设置随机种子
     set_seed(seed)
+
+    # 设置输出目录
     output_dir = os.path.join(output_dir, time.strftime('%Y-%m-%d-%H-%M-%S'))
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
+
+    # 保存eval信息
     with open(os.path.join(output_dir, 'eval.yaml'), 'w') as f:
         f.write('batch_size: {}\n'.format(batch_size))
         f.write('learning_rate: {}\n'.format(learning_rate))
         f.write('seed: {}\n'.format(seed))
         f.write('n_classes: {}\n'.format(net_config['n_classes']))
+
+    # 启动log
     logger = setup_logger(output_dir)
     for data in str(config).split(', '):
         logger.info(data)
@@ -51,13 +57,13 @@ def main(epochs, batch_size, learning_rate, output_dir, iterations, seed):
     train_transforms = transforms.Compose([
         # transforms.RandomResizedCrop((256, 256)),
         transforms.ToTensor(),
-        # transforms.Normalize([0.485, 0.456, 0.406],  # 归一化
+        # transforms.Normalize([0.485, 0.456, 0.406],
         #                      [0.229, 0.224, 0.225])
     ])
     test_transforms = transforms.Compose([
         # transforms.RandomResizedCrop((256, 256)),
         transforms.ToTensor(),
-        # transforms.Normalize([0.485, 0.456, 0.406],  # 归一化
+        # transforms.Normalize([0.485, 0.456, 0.406],
         #                      [0.229, 0.224, 0.225])
     ])
 
@@ -68,7 +74,7 @@ def main(epochs, batch_size, learning_rate, output_dir, iterations, seed):
     test_loader = DataLoader(dataset=test_data, batch_size=batch_size, shuffle=False, num_workers=4)
     logger.info('train_data: {}, test_data: {}'.format(len(train_data), len(test_data)))
 
-    # model
+    # 模型
     model = AttaNet(n_classes=net_config['n_classes'])
     start = 1
     if not args.resume is None:
@@ -76,9 +82,9 @@ def main(epochs, batch_size, learning_rate, output_dir, iterations, seed):
         logger.info('successful load weights: {}'.format(args.resume))
         import re
         start = int(re.search('epoch-(\d+)', args.resume).group(1)) + 1
-    model.to(device)
     model.optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     model.loss_func = Tverskyloss()
+    model.to(device)
     train(model, start, epochs, train_loader, test_loader, iterations, logger, device, output_dir)
 
 
