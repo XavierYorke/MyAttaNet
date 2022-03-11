@@ -4,8 +4,7 @@ import torchkeras
 import netron
 
 
-def export(save_pth):
-    model_path = r'outputs/2022-03-03-09-18-04/epoch-100.pth'
+def export(model_path, save_pth):
 
     net = AttaNet(n_classes=2)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -19,7 +18,7 @@ def export(save_pth):
     net.eval()
 
     batch_size = 1
-    c, h, w = 3, 480, 496
+    c, h, w = 1, 1800, 2800
 
     # Input to the model
     x = torch.randn(batch_size, c, h, w, requires_grad=True)
@@ -39,6 +38,7 @@ def export(save_pth):
 
 
 if __name__ == '__main__':
-    onnx_path = 'exports/AttaNet.onnx'
-    # export(onnx_path)
-    netron.start(onnx_path)
+    onnx_path = 'exports/AttaNet_1800x2800.onnx'
+    model_path = r'outputs/zy/2022-03-11-09-02-37/epoch-100.pth'
+    export(model_path, onnx_path)
+    # netron.start(onnx_path)

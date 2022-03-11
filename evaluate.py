@@ -2,7 +2,6 @@ import os
 import time
 import torch
 from torch.utils.data import DataLoader
-from torchvision import transforms
 import argparse
 import yaml
 from utils import setup_logger
@@ -12,9 +11,11 @@ from models.loss import Tverskyloss
 import numpy as np
 from medpy import metric
 import pandas as pd
+import matplotlib.pyplot as plt
+from dataloaders.trans import test_transforms
 
 
-def main(batch_size, learning_rate, seed, n_classes):
+def main(batch_size, learning_rate, seed, n_classes, txt_path):
     # set random seed
     torch.manual_seed(seed)
     np.random.seed(seed)
@@ -28,18 +29,14 @@ def main(batch_size, learning_rate, seed, n_classes):
         os.makedirs(output_dir)
     logger = setup_logger(output_dir)
 
-    # data
-    test_transforms = transforms.Compose([
-        transforms.ToTensor(),
-    ])
-    test_data = MyDataset(txt='data/test.txt', transform=test_transforms)
+    test_data = MyDataset(txt=txt_path + '/test.txt', transform=test_transforms)
     test_loader = DataLoader(dataset=test_data, batch_size=batch_size, shuffle=False, num_workers=4)
     logger.info('test_data: {}'.format(len(test_data)))
 
     # model
     model = AttaNet(n_classes=n_classes)
-    model.load_state_dict(torch.load(args.resume, map_location=device))
-    logger.info('successful load weights: {}'.format(args.resume))
+    model.load_state_dict(torch.load(os.path.join(args.resume, args.epoch), map_location=device))
+    logger.info('successful load weights: {}'.format(os.path.join(args.resume, args.epoch)))
     model.to(device)
     model.optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     model.loss_func = Tverskyloss()
@@ -58,8 +55,18 @@ def main(batch_size, learning_rate, seed, n_classes):
 
             image = result[index].cpu().detach().numpy().transpose(1, 2, 0)
             image = np.squeeze(image, axis=-1)
+            plt.subplot(1, 2, 1)
+            plt.imshow(image, cmap='gray')
+
             label = labels[index].cpu().detach().numpy().transpose(1, 2, 0)
             label = label[:, :, 0]
+            plt.subplot(1, 2, 2)
+            plt.imshow(label, cmap='gray')
+            plt.show()
+            image[image >= 0.5] = 1
+            image[image < 0.5] = 0
+            label[label >= 0.5] = 1
+            label[label < 0.5] = 0
 
             # Dice系数是一种集合相似度度量函数，通常用于计算两个样本的相似度，取值范围在[0,1]
             dice = metric.dc(image.astype(np.uint8), label.astype(np.uint8))
@@ -81,12 +88,12 @@ def main(batch_size, learning_rate, seed, n_classes):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Pupil evaluate')
-    parser.add_argument('-r', '--resume', default='outputs/2022-03-03-09-18-04/epoch-90.pth')
-    parser.add_argument('-c', '--config', default='outputs/2022-03-03-09-18-04/eval.yaml')
+    parser = argparse.ArgumentParser(description='ZY evaluate')
+    parser.add_argument('-r', '--resume', default='outputs/zy/2022-03-11-09-02-37')  # 'outputs/EyeBall/2022-03-03-09-18-04 star'
+    parser.add_argument('-e', '--epoch', default='epoch-100.pth')
     args = parser.parse_args()
 
-    config = open(args.config)
+    config = open(args.resume + '/eval.yaml')
     config = yaml.load(config, Loader=yaml.FullLoader)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     main(**config)

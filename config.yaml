@@ -1,13 +1,14 @@
 data_config:
   #H_G: \image\distance \mask\distance_mask 480 x 496
-  dataset_dir: ../../Datasets/Eye/H_G
-  txt_dir: "data"
+  dataset_dir: ../../Datasets/ZY_0310/data
+  txt_dir: data/zy
 
 train_config:
   epochs: 100
-  batch_size: 6
+  batch_size: 2
   learning_rate: 0.0001
-  output_dir: outputs
+  txt_path: data/zy
+  output_dir: outputs/zy
   iterations: 10
   seed: 1234
 

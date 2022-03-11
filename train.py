@@ -36,7 +36,6 @@ def train(model, start, epochs, dl_train, dl_valid, log_step_freq, logger, devic
         for step, (images, labels) in enumerate(dl_train, 1):
             images = images.to(device)
             labels = labels.to(device)
-            
             loss = train_step(model, images, labels)
             # 打印batch级别日志
             loss_sum += loss

@@ -4,7 +4,8 @@ from PIL import Image
 
 # 定义读取文件的格式
 def default_loader(path):
-    return Image.open(path).convert('RGB')
+    # return Image.open(path).convert('RGB')
+    return Image.open(path).convert('L')
 
 # 首先继承上面的dataset类。然后在__init__()方法中得到图像的路径，然后将图像路径组成一个数组，这样在__getitim__()中就可以直接读取：
 

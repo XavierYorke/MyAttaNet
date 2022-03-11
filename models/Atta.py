@@ -75,9 +75,10 @@ class StripAttentionModule(nn.Module):
     def forward(self, x):
         q = self.conv1(x)
         batchsize, c_middle, h, w = q.size()
-        # q = F.avg_pool2d(q, [h, 1])
+        q = F.avg_pool2d(q, [h, 1])
         # print(h)
-        q = F.avg_pool2d(q, [30, 1])
+        # q = F.avg_pool2d(q, [23, 1])
+        # q = F.avg_pool2d(q, [113, 1])
         q = q.view(batchsize, c_middle, -1).permute(0, 2, 1)
 
         k = self.conv2(x)
@@ -87,9 +88,10 @@ class StripAttentionModule(nn.Module):
 
         v = self.conv3(x)
         c_out = v.size()[1]
-        # v = F.avg_pool2d(v, [h, 1])
+        v = F.avg_pool2d(v, [h, 1])
         # print(h)
-        v = F.avg_pool2d(v, [30, 1])
+        # v = F.avg_pool2d(v, [23, 1])
+        # v = F.avg_pool2d(v, [113, 1])
         v = v.view(batchsize, c_out, -1)
 
         augmented_feature_map = torch.bmm(v, attention_map)
@@ -130,9 +132,10 @@ class AttentionFusionModule(nn.Module):
         fcat = torch.cat([feat16, feat32_up], dim=1)
         feat = self.conv(fcat)
 
-        # atten = F.avg_pool2d(feat, feat.size()[2:])
+        atten = F.avg_pool2d(feat, feat.size()[2:])
         # print(feat.size()[2:])
-        atten = F.avg_pool2d(feat, [30, 31])
+        # atten = F.avg_pool2d(feat, [23, 27])
+        # atten = F.avg_pool2d(feat, [113, 175])
         atten = self.conv_atten(atten)
         atten = self.bn_atten(atten)
         atten = self.sigmoid_atten(atten)
@@ -160,6 +163,8 @@ class AttaNetHead(nn.Module):
     def __init__(self, *args, **kwargs):
         super(AttaNetHead, self).__init__()
         self.resnet = ResNet18()
+        self.resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3,
+                                        bias=False)
         self.afm = AttentionFusionModule(640, 128)
         self.conv_head32 = ConvBNReLU(512, 128, ks=3, stride=1, padding=1)
         self.conv_head16 = ConvBNReLU(256, 128, ks=3, stride=1, padding=1)

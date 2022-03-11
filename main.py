@@ -1,7 +1,6 @@
 import argparse
 import torch
 from dataloaders.dataloader import MyDataset
-from torchvision import transforms
 from torch.utils.data import DataLoader
 from utils import setup_logger
 from models.Atta import AttaNet
@@ -12,6 +11,7 @@ import time
 import os
 import numpy as np
 import random
+from dataloaders.trans import train_transforms, test_transforms
 
 
 def parse_args():
@@ -32,7 +32,7 @@ def set_seed(seed):
         torch.backends.cudnn.deterministic = True
 
 
-def main(epochs, batch_size, learning_rate, output_dir, iterations, seed):
+def main(epochs, batch_size, learning_rate, txt_path, output_dir, iterations, seed):
     # 设置随机种子
     set_seed(seed)
 
@@ -47,31 +47,18 @@ def main(epochs, batch_size, learning_rate, output_dir, iterations, seed):
         f.write('learning_rate: {}\n'.format(learning_rate))
         f.write('seed: {}\n'.format(seed))
         f.write('n_classes: {}\n'.format(net_config['n_classes']))
+        f.write('txt_path: {}\n'.format(txt_path))
 
     # 启动log
     logger = setup_logger(output_dir)
     for data in str(config).split(', '):
         logger.info(data)
 
-    # 图像的初始化操作
-    train_transforms = transforms.Compose([
-        # transforms.RandomResizedCrop((256, 256)),
-        transforms.ToTensor(),
-        # transforms.Normalize([0.485, 0.456, 0.406],
-        #                      [0.229, 0.224, 0.225])
-    ])
-    test_transforms = transforms.Compose([
-        # transforms.RandomResizedCrop((256, 256)),
-        transforms.ToTensor(),
-        # transforms.Normalize([0.485, 0.456, 0.406],
-        #                      [0.229, 0.224, 0.225])
-    ])
-
     # 数据集加载
-    train_data = MyDataset(txt='data/train.txt', transform=train_transforms)
-    test_data = MyDataset(txt='data/test.txt', transform=test_transforms)
-    train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True, num_workers=4)
-    test_loader = DataLoader(dataset=test_data, batch_size=batch_size, shuffle=False, num_workers=4)
+    train_data = MyDataset(txt=txt_path + '/train.txt', transform=train_transforms)
+    test_data = MyDataset(txt=txt_path + '/test.txt', transform=test_transforms)
+    train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True, num_workers=4, drop_last=True)
+    test_loader = DataLoader(dataset=test_data, batch_size=batch_size, shuffle=False, num_workers=4, drop_last=True)
     logger.info('train_data: {}, test_data: {}'.format(len(train_data), len(test_data)))
 
     # 模型
