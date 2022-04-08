@@ -19,27 +19,30 @@ def default_loader(path):
 
 
 class MyDataset(Dataset):
-    def __init__(self, data_path, trans=None):
+    def __init__(self, data_path, trans=None, mode='train'):
         super().__init__()
         self.data_path = data_path
         self.transform = trans
         self.to_tensor = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
-            ])
+        ])
+        self.mode = mode
 
     def __getitem__(self, index):
         image_path = self.data_path[index]['image']
-        label_path = self.data_path[index]['label']
         image = default_loader(image_path)
-        label = Image.open(label_path).crop((210, 200, 890, 820))
         if self.transform is not None:
             # 数据标签转换为Tensor
             image = self.transform(image)
         image = self.to_tensor(image)
-        label = np.array(label).astype(np.int64)
-        label[label == 255] = 1
-        return image, label
+        if self.mode == 'train':
+            label_path = self.data_path[index]['label']
+            label = Image.open(label_path).crop((210, 200, 890, 820))
+            label = np.array(label).astype(np.int64)
+            label[label == 255] = 1
+            return image, label
+        return image
 
     def __len__(self):
         return len(self.data_path)
@@ -47,4 +50,3 @@ class MyDataset(Dataset):
     def get_path(self, index):
         img, label = self.data_path[index]['image'], self.data_path[index]['label']
         return img, label
-

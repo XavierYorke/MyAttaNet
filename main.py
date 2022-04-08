@@ -55,7 +55,7 @@ def main(epochs, batch_size, learning_rate, output_dir, iterations, seed):
 
 
     # 数据集加载
-    train_dict, val_dict = split_ds(data_config['dataset_dir'], 0.8)
+    train_dict, val_dict = split_ds(data_config['dataset_dir'], 0.8, seed)
     train_ds = MyDataset(train_dict, train_transforms)
     val_ds = MyDataset(val_dict, val_transforms)
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=2, drop_last=True)

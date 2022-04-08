@@ -24,13 +24,13 @@ def main(batch_size, learning_rate, seed, n_classes):
         torch.backends.cudnn.deterministic = True
 
     # log
-    output_dir = os.path.join('eval', time.strftime('%Y-%m-%d-%H-%M-%S'))
+    output_dir = os.path.join('eval', args.name, time.strftime('%Y-%m-%d-%H-%M-%S'))
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     logger = setup_logger(output_dir)
 
     # data
-    _, test_dict = split_ds(args.data_dir, 0.8)
+    _, test_dict = split_ds(args.data_dir, 0.8, seed)
     test_ds = MyDataset(test_dict)
     test_loader = DataLoader(dataset=test_ds, batch_size=batch_size, shuffle=False, num_workers=4)
 
@@ -61,8 +61,10 @@ def main(batch_size, learning_rate, seed, n_classes):
             plt.figure()
             plt.subplot(1, 2, 1)
             plt.title('output')
+            plt.xticks([]), plt.yticks([])
             plt.imshow(image, cmap='gray')
             plt.subplot(1, 2, 2)
+            plt.xticks([]), plt.yticks([])
             plt.title('label')
             plt.imshow(label, cmap='gray')
             plt.savefig(os.path.join(output_dir, img_pth))
@@ -90,10 +92,11 @@ def main(batch_size, learning_rate, seed, n_classes):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Pupil evaluate')
-    parser.add_argument('--base', default='outputs/thyroid_raw/2022-04-08-13-43-15/')
+    parser.add_argument('--base', default='outputs/thyroid_raw/2022-04-08-15-44-22/')
     parser.add_argument('-r', '--resume', default='epoch-100.pth')
     parser.add_argument('-c', '--config', default='eval.yaml')
     parser.add_argument('--data_dir', default='../../Datasets/thyroid_raw')
+    parser.add_argument('--name', default='thyroid_raw')
     args = parser.parse_args()
 
     args.resume = args.base + args.resume
