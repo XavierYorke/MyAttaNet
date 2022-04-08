@@ -2,7 +2,14 @@
 ### 配置文件
 config.yaml: 参数设置
 ### 数据集的准备
-使用utils/get_txt.py生成对应数据集列表
+文件夹格式
+```bash
+├─data_dir
+│  ├─images
+│  │  └─train
+│  └─labels
+│      └─train
+```
 ### 训练模型
 ```basic
 python main.py

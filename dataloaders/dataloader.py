@@ -1,44 +1,50 @@
+import torch
 from torch.utils.data import Dataset
 from PIL import Image
+import numpy as np
+from torchvision import transforms
+
+train_transforms = transforms.Compose([
+
+])
+val_transforms = transforms.Compose([
+
+])
 
 
 # 定义读取文件的格式
 def default_loader(path):
-    return Image.open(path).convert('RGB')
+    # return Image.open(path).resize((500, 330)).convert('RGB')
+    return Image.open(path).crop((210, 200, 890, 820)).convert('RGB')
 
-# 首先继承上面的dataset类。然后在__init__()方法中得到图像的路径，然后将图像路径组成一个数组，这样在__getitim__()中就可以直接读取：
 
-
-class MyDataset(Dataset):  # 创建自己的类：MyDataset,这个类是继承的torch.utils.data.Dataset
-    def __init__(self, txt, transform=None, target_transform=None, loader=default_loader):
-        super(MyDataset, self).__init__()  # 对继承自父类的属性进行初始化
-        fh = open(txt, 'r')  # 按照传入的路径和txt文本参数，打开这个文本，并读取内容
-        imgs = []
-        for line in fh:
-            line = line.strip('\n')
-            words = line.split()  # 用split将该行分割成列表  split的默认参数是空格，所以不传递任何参数时分割空格
-            # 把txt里的内容读入imgs列表保存，具体是words几要看txt内容而定
-            imgs.append((words[0], words[1]))
-        self.imgs = imgs
-        self.transform = transform
-        self.target_transform = target_transform
-        self.loader = loader
+class MyDataset(Dataset):
+    def __init__(self, data_path, trans=None):
+        super().__init__()
+        self.data_path = data_path
+        self.transform = trans
+        self.to_tensor = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+            ])
 
     def __getitem__(self, index):
-        img, label = self.imgs[index]
-        img = self.loader(img)  
-        label = self.loader(label)
+        image_path = self.data_path[index]['image']
+        label_path = self.data_path[index]['label']
+        image = default_loader(image_path)
+        label = Image.open(label_path).crop((210, 200, 890, 820))
         if self.transform is not None:
             # 数据标签转换为Tensor
-            img = self.transform(img)  
-            label = self.transform(label)
-        return img, label  
+            image = self.transform(image)
+        image = self.to_tensor(image)
+        label = np.array(label).astype(np.int64)
+        label[label == 255] = 1
+        return image, label
 
     def __len__(self):
-        return len(self.imgs)
+        return len(self.data_path)
 
     def get_path(self, index):
-        img, label = self.imgs[index]
+        img, label = self.data_path[index]['image'], self.data_path[index]['label']
         return img, label
-
 

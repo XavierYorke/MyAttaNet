@@ -1,15 +1,16 @@
 data_config:
   #H_G: \image\distance \mask\distance_mask 480 x 496
-  dataset_dir: ../../Datasets/Eye/H_G
-  txt_dir: "data"
+  dataset_dir: ../../Datasets/thyroid_raw
+#  dataset_dir: ../../Datasets/VOCdevkit/VOC2012
+#  txt_dir: "data"
 
 train_config:
   epochs: 100
-  batch_size: 6
-  learning_rate: 0.0001
-  output_dir: outputs
+  batch_size: 5
+  learning_rate: 0.001
+  output_dir: thyroid_raw
   iterations: 10
-  seed: 1234
+  seed: 1228
 
 net_config:
   n_classes: 2

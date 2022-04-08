@@ -6,12 +6,13 @@ from torchvision import transforms
 import argparse
 import yaml
 from utils import setup_logger
-from dataloaders.dataloader import MyDataset
+from dataloaders import MyDataset, split_ds
 from models.Atta import AttaNet
 from models.loss import Tverskyloss
 import numpy as np
 from medpy import metric
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 def main(batch_size, learning_rate, seed, n_classes):
@@ -29,12 +30,11 @@ def main(batch_size, learning_rate, seed, n_classes):
     logger = setup_logger(output_dir)
 
     # data
-    test_transforms = transforms.Compose([
-        transforms.ToTensor(),
-    ])
-    test_data = MyDataset(txt='data/test.txt', transform=test_transforms)
-    test_loader = DataLoader(dataset=test_data, batch_size=batch_size, shuffle=False, num_workers=4)
-    logger.info('test_data: {}'.format(len(test_data)))
+    _, test_dict = split_ds(args.data_dir, 0.8)
+    test_ds = MyDataset(test_dict)
+    test_loader = DataLoader(dataset=test_ds, batch_size=batch_size, shuffle=False, num_workers=4)
+
+    logger.info('test_data: {}'.format(len(test_ds)))
 
     # model
     model = AttaNet(n_classes=n_classes)
@@ -54,12 +54,20 @@ def main(batch_size, learning_rate, seed, n_classes):
             labels = labels.cuda()
         result = model(images)[0]
         for index in range(result.shape[0]):
-            img_pth, _ = test_data.get_path(step * batch_size + index)
-
-            image = result[index].cpu().detach().numpy().transpose(1, 2, 0)
-            image = np.squeeze(image, axis=-1)
-            label = labels[index].cpu().detach().numpy().transpose(1, 2, 0)
-            label = label[:, :, 0]
+            img_pth, _ = test_ds.get_path(step * batch_size + index)
+            img_pth = os.path.basename(img_pth)
+            image = torch.argmax(result[index], dim=0).cpu().detach().numpy()
+            label = labels[index].cpu().detach().numpy()
+            plt.figure()
+            plt.subplot(1, 2, 1)
+            plt.title('output')
+            plt.imshow(image, cmap='gray')
+            plt.subplot(1, 2, 2)
+            plt.title('label')
+            plt.imshow(label, cmap='gray')
+            plt.savefig(os.path.join(output_dir, img_pth))
+            plt.cla()
+            plt.close("all")
 
             # Dice系数是一种集合相似度度量函数，通常用于计算两个样本的相似度，取值范围在[0,1]
             dice = metric.dc(image.astype(np.uint8), label.astype(np.uint8))
@@ -69,10 +77,10 @@ def main(batch_size, learning_rate, seed, n_classes):
             recall = metric.recall(image.astype(np.uint8), label.astype(np.uint8))
             # 真负类率(True Negative Rate),所有真实负类中，模型预测正确负类的比例
             tnr = metric.true_negative_rate(image.astype(np.uint8), label.astype(np.uint8))
-            info = (img_pth[-19:], dice, precision, recall, tnr)
+            info = (img_pth, dice, precision, recall, tnr)
             evaluator.loc[step * batch_size + index] = info
             logger.info('[{}] dice: {:.3f}, precision: {:.3f}, recall: {:.3f}, tnr: {:.3f}'.
-                        format(img_pth[-19:], dice, precision, recall, tnr))
+                        format(img_pth, dice, precision, recall, tnr))
 
     evaluator.to_csv(os.path.join(output_dir, 'evaluator.csv'), index=False)
     mean_info = evaluator[1:].mean(axis=0)
@@ -82,10 +90,14 @@ def main(batch_size, learning_rate, seed, n_classes):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Pupil evaluate')
-    parser.add_argument('-r', '--resume', default='outputs/2022-03-03-09-18-04/epoch-90.pth')
-    parser.add_argument('-c', '--config', default='outputs/2022-03-03-09-18-04/eval.yaml')
+    parser.add_argument('--base', default='outputs/thyroid_raw/2022-04-08-13-43-15/')
+    parser.add_argument('-r', '--resume', default='epoch-100.pth')
+    parser.add_argument('-c', '--config', default='eval.yaml')
+    parser.add_argument('--data_dir', default='../../Datasets/thyroid_raw')
     args = parser.parse_args()
 
+    args.resume = args.base + args.resume
+    args.config = args.base + args.config
     config = open(args.config)
     config = yaml.load(config, Loader=yaml.FullLoader)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
