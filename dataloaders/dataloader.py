@@ -40,7 +40,7 @@ class MyDataset(Dataset):
             label_path = self.data_path[index]['label']
             label = Image.open(label_path).crop((210, 200, 890, 820))
             label = np.array(label).astype(np.int64)
-            label[label == 255] = 1
+            label[label > 0] = 1
             return image, label
         return image
 
